@@ -6,9 +6,9 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import java.time.Clock;
 import java.time.Instant;
 
+@Getter
 final class InnerMatch extends Match {
 
-    @Getter
     private final Instant timestamp;
 
     InnerMatch(Clock clock, String homeTeamName, String awayTeamName) {
