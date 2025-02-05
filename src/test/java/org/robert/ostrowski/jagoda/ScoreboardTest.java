@@ -148,7 +148,7 @@ public class ScoreboardTest {
         summary = scoreboard.getSummary();
         Match match2 = scoreboard.getMatchById(matchId2);
         Assertions.assertEquals(2, summary.size());
-        Assertions.assertEquals(match2, scoreboard.getMatchById(0));
+        Assertions.assertEquals(match2, summary.get(0));
     }
 
     void multithreadChange(Scoreboard scoreboard, AtomicLong matchId, String homeName, String awayName) {

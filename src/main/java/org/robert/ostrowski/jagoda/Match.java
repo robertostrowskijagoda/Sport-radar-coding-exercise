@@ -1,8 +1,10 @@
 package org.robert.ostrowski.jagoda;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
 @Getter
+@EqualsAndHashCode
 public class Match {
     protected final String homeTeamName;
     protected final String awayTeamName;
