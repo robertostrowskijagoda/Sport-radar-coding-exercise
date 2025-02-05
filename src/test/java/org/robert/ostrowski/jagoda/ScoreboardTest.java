@@ -4,13 +4,44 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
+//Todo: Add more multithreading tests
 public class ScoreboardTest {
 
     String homeName = "Home";
     String awayName = "Away";
     String homeName2 = "Home2";
     String awayName2 = "Away2";
+
+    @Test
+    void testGetMatchImmutability() {
+        Scoreboard scoreboard = new Scoreboard();
+        long id = scoreboard.startNewMatch(homeName, awayName);
+        int homeTeamScore1 = 1234;
+        int awayTeamScore1 = 5678;
+        int homeTeamScore2 = 4321;
+        int awayTeamScore2 = 8765;
+        scoreboard.updateScore(id, homeTeamScore1, awayTeamScore1);
+        Match match1 = scoreboard.getMatchById(id);
+        Match match1a = scoreboard.getSummary().get(0);
+        Assertions.assertEquals(homeTeamScore1, match1.getHomeTeamScore());
+        Assertions.assertEquals(awayTeamScore1, match1.getAwayTeamScore());
+        Assertions.assertEquals(homeTeamScore1, match1a.getHomeTeamScore());
+        Assertions.assertEquals(awayTeamScore1, match1a.getAwayTeamScore());
+        scoreboard.updateScore(id, homeTeamScore2, awayTeamScore2);
+        Match match2 = scoreboard.getMatchById(id);
+        Match match2a = scoreboard.getSummary().get(0);
+        Assertions.assertEquals(homeTeamScore2, match2.getHomeTeamScore());
+        Assertions.assertEquals(awayTeamScore2, match2.getAwayTeamScore());
+        Assertions.assertEquals(homeTeamScore1, match1.getHomeTeamScore());
+        Assertions.assertEquals(awayTeamScore1, match1.getAwayTeamScore());
+        Assertions.assertEquals(homeTeamScore2, match2a.getHomeTeamScore());
+        Assertions.assertEquals(awayTeamScore2, match2a.getAwayTeamScore());
+        Assertions.assertEquals(homeTeamScore1, match1a.getHomeTeamScore());
+        Assertions.assertEquals(awayTeamScore1, match1a.getAwayTeamScore());
+    }
 
     @Test
     void testStartAndGetByIdForDefaultMatch() {
@@ -75,6 +106,7 @@ public class ScoreboardTest {
         Match match = scoreboard.getMatchById(matchId);
         Assertions.assertEquals(new Match(homeName, awayName), match);
         scoreboard.updateScore(matchId, 1234, 5678);
+        match = scoreboard.getMatchById(matchId);
         Assertions.assertEquals(1234, match.getHomeTeamScore());
         Assertions.assertEquals(5678, match.getAwayTeamScore());
     }
@@ -117,5 +149,63 @@ public class ScoreboardTest {
         Match match2 = scoreboard.getMatchById(matchId2);
         Assertions.assertEquals(2, summary.size());
         Assertions.assertEquals(match2, scoreboard.getMatchById(0));
+    }
+
+    void multithreadChange(Scoreboard scoreboard, AtomicLong matchId, String homeName, String awayName) {
+        synchronized (matchId) {
+            if (matchId.get() == -1) {
+                matchId.set(scoreboard.startNewMatch(homeName, awayName));
+            } else {
+                scoreboard.finishMatch(matchId.get());
+                matchId.set(scoreboard.findMatchId(homeName, awayName));
+            }
+        }
+    }
+
+    boolean multithreadVerify(Scoreboard scoreboard, AtomicLong matchId, AtomicBoolean failed, String homeName, String awayName) {
+        synchronized (matchId) {
+            if (matchId.get() == -1) {
+                if (scoreboard.findMatchId(homeName, awayName) != -1) {
+                    failed.set(true);
+                    return true;
+                }
+            } else {
+                try {
+                    scoreboard.getMatchById(matchId.get());
+                } catch (IllegalArgumentException exception) {
+                    failed.set(true);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    void  multithreadLoop(int iterations, AtomicLong match1Id, AtomicLong match2Id, Scoreboard scoreboard, AtomicBoolean failed) {
+        for (int i = 0; i < iterations; i++) {
+            multithreadChange(scoreboard, match1Id, homeName, awayName);
+            if(multithreadVerify(scoreboard, match1Id, failed, homeName, awayName)) return;
+            multithreadChange(scoreboard, match2Id, homeName2, awayName2);
+            if(multithreadVerify(scoreboard, match2Id, failed, homeName2, awayName2)) return;
+        }
+    }
+
+    @Test
+    void testMultithreading() throws InterruptedException {
+        AtomicLong match1Id = new AtomicLong();
+        AtomicLong match2Id = new AtomicLong();
+        Scoreboard scoreboard = new Scoreboard();
+        AtomicBoolean failed = new AtomicBoolean();
+
+        Thread worker1 = new Thread(() -> multithreadLoop(1000, match1Id, match2Id, scoreboard, failed));
+        Thread worker2 = new Thread(() -> multithreadLoop(1000, match1Id, match2Id, scoreboard, failed));
+        Thread worker3 = new Thread(() -> multithreadLoop(1000, match1Id, match2Id, scoreboard, failed));
+
+        worker1.start();
+        worker2.start();
+        worker3.start();
+        worker1.join();
+        worker2.join();
+        worker3.join();
     }
 }

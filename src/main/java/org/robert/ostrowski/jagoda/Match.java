@@ -9,6 +9,13 @@ public class Match {
     protected volatile int homeTeamScore;
     protected volatile int awayTeamScore;
 
+    Match(Match other) {
+        homeTeamName = other.homeTeamName;
+        awayTeamName = other.awayTeamName;
+        homeTeamScore = other.homeTeamScore;
+        awayTeamScore = other.awayTeamScore;
+    }
+
     Match(String homeTeamName, String awayTeamName) {
         if (homeTeamName == null || homeTeamName.isEmpty())
             throw new IllegalArgumentException("Home team name can't be null or empty");

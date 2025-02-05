@@ -7,6 +7,18 @@ import org.junit.jupiter.api.Test;
 public class MatchTest {
 
     @Test
+    void testCopyConstructor() {
+        Match match = new Match("Home", "Away");
+        match.awayTeamScore = 1234;
+        match.homeTeamScore = 5678;
+        Match copyMatch = new Match(match);
+        Assertions.assertEquals(match.homeTeamName, copyMatch.homeTeamName);
+        Assertions.assertEquals(match.awayTeamName, copyMatch.awayTeamName);
+        Assertions.assertEquals(match.homeTeamScore, copyMatch.homeTeamScore);
+        Assertions.assertEquals(match.awayTeamScore, copyMatch.awayTeamScore);
+    }
+
+    @Test
     void testValidNamesConstructor() {
         String homeName = "Home";
         String awayName = "Away";
