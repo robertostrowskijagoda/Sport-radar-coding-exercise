@@ -136,27 +136,33 @@ public class ScoreboardTest {
     void testGetSummary() {
         Scoreboard scoreboard = new Scoreboard();
         Assertions.assertEquals(0, scoreboard.getSummary().size());
-        scoreboard.startNewMatch(homeName, awayName);
+
+        long matchId1 = scoreboard.startNewMatch(homeName, awayName);
         List<Match> summary = scoreboard.getSummary();
         Assertions.assertEquals(1, summary.size());
         Assertions.assertEquals(new Match(homeName, awayName), summary.get(0));
-        long matchId2 = scoreboard.startNewMatch(homeName2, awayName2);
+
+        scoreboard.startNewMatch(homeName2, awayName2);
         summary = scoreboard.getSummary();
         Assertions.assertEquals(2, summary.size());
-        Assertions.assertEquals(new Match(homeName2, awayName2), summary.get(1));
-        scoreboard.updateScore(matchId2, 1, 0);
+        Assertions.assertEquals(new Match(homeName2, awayName2), summary.get(0));
+
+        scoreboard.updateScore(matchId1, 1, 0);
         summary = scoreboard.getSummary();
-        Match match2 = scoreboard.getMatchById(matchId2);
+        Match match1 = scoreboard.getMatchById(matchId1);
         Assertions.assertEquals(2, summary.size());
-        Assertions.assertEquals(match2, summary.get(0));
+        Assertions.assertEquals(match1, summary.get(0));
     }
 
     void multithreadChange(Scoreboard scoreboard, AtomicLong matchId, String homeName, String awayName) {
         synchronized (matchId) {
             if (matchId.get() == -1) {
-                matchId.set(scoreboard.startNewMatch(homeName, awayName));
+                long id = scoreboard.startNewMatch(homeName, awayName);
+                System.out.println("Start: " + id + ", " + homeName + ", " + awayName + ", " + Thread.currentThread().getName());
+                matchId.set(id);
             } else {
                 scoreboard.finishMatch(matchId.get());
+                System.out.println("End: " + matchId.get() + ", " + Thread.currentThread().getName());
                 matchId.set(scoreboard.findMatchId(homeName, awayName));
             }
         }

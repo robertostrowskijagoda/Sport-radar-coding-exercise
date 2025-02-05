@@ -8,14 +8,14 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class Scoreboard {
+public final class Scoreboard {
 
-    Clock clock = Clock.system(ZoneId.of("UTC"));
-    ConcurrentMap<Long, InnerMatch> matches = new ConcurrentHashMap<>();
-    ConcurrentMap<String, Long> matchesKeys = new ConcurrentHashMap<>();
-    ConcurrentMap<String, Long> activeTeams = new ConcurrentHashMap<>();
-    ConcurrentLinkedQueue<Long> freeKeys = new ConcurrentLinkedQueue<>();
-    AtomicLong currKey = new AtomicLong();
+    final Clock clock = Clock.system(ZoneId.of("UTC"));
+    final ConcurrentMap<Long, InnerMatch> matches = new ConcurrentHashMap<>();
+    final ConcurrentMap<String, Long> matchesKeys = new ConcurrentHashMap<>();
+    final ConcurrentMap<String, Long> activeTeams = new ConcurrentHashMap<>();
+    final Queue<Long> freeKeys = new LinkedList<>();
+    final AtomicLong currKey = new AtomicLong();
 
     public long startNewMatch (String homeTeamName, String awayTeamName) {
         InnerMatch innerMatch = new InnerMatch(clock, homeTeamName, awayTeamName);
@@ -40,6 +40,7 @@ public class Scoreboard {
     }
 
     public void finishMatch (long matchId) {
+        returnKey(matchId);
         InnerMatch match = getMatchOrThrow(matchId);
         matchesKeys.remove(match.getStringId());
         matches.remove(matchId);
@@ -64,13 +65,15 @@ public class Scoreboard {
             int diff = m2.getTotalScore() - m1.getTotalScore();
             if (diff != 0)
                 return diff;
-            return m1.getTimestamp().compareTo(m2.getTimestamp());
+            return m2.getTimestamp().compareTo(m1.getTimestamp());
         }).map(Match::new).toList();
     }
 
     private long getFreeKey() {
-        if (!freeKeys.isEmpty())
-            return freeKeys.poll();
+        synchronized (freeKeys) {
+            if (!freeKeys.isEmpty())
+                return freeKeys.poll();
+        }
         return currKey.getAndIncrement();
     }
 
