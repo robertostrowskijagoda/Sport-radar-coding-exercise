@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 public class MatchTest {
 
     @Test
-    public void testValidNamesConstructor() {
+    void testValidNamesConstructor() {
         String homeName = "Home";
         String awayName = "Away";
         MutableObject<Match> matchReference = new MutableObject<>();
@@ -20,26 +20,27 @@ public class MatchTest {
     }
 
     @Test
-    public void testSameNamesConstructor() {
+    void testSameNamesConstructor() {
         String name = "Name";
         Assertions.assertThrows(IllegalArgumentException.class, () -> new Match(name, name));
     }
 
     @Test
-    public void testRestrictedCharInHomeNameConstructor() {
+    void testRestrictedCharInHomeNameConstructor() {
         String homeName = "Home:Name";
         String awayName = "Away";
         Assertions.assertThrows(IllegalArgumentException.class, () -> new Match(homeName, awayName));
     }
 
     @Test
-    public void testRestrictedCharInAwayNameConstructor() {
+    void testRestrictedCharInAwayNameConstructor() {
         String homeName = "Home";
         String awayName = "Away:Name";
         Assertions.assertThrows(IllegalArgumentException.class, () -> new Match(homeName, awayName));
     }
 
-    @Test void testToString() {
+    @Test
+    void testToString() {
         String homeName = "Home";
         String awayName = "Away";
         Assertions.assertEquals(homeName + " 0 - " + awayName + " 0", new Match(homeName, awayName).toString());
