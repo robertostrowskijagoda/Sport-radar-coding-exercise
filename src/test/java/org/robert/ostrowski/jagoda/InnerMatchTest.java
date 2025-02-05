@@ -35,9 +35,14 @@ public class InnerMatchTest {
     }
 
     @Test
+    void testGenerateStringId() {
+        Assertions.assertEquals(homeName + ":" + awayName, InnerMatch.generateStringId(homeName, awayName));
+    }
+
+    @Test
     void testGetStringId() {
         InnerMatch innerMatch = new InnerMatch(defaultClock, homeName, awayName);
-        Assertions.assertEquals(homeName + ":" + awayName, innerMatch.getStringId());
+        Assertions.assertEquals(InnerMatch.generateStringId(homeName, awayName), innerMatch.getStringId());
     }
 
     void testSetNegativeScore(Consumer<Integer> setter) {

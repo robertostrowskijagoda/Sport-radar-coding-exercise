@@ -22,6 +22,10 @@ public class Scoreboard {
         throw new NotImplementedException();
     }
 
+    public Match getMatchById (long id) {
+        throw new NotImplementedException();
+    }
+
     public List<Match> getSummary () {
         throw new NotImplementedException();
     }
