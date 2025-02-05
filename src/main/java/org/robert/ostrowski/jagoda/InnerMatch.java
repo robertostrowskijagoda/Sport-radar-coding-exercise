@@ -5,13 +5,21 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.time.Instant;
 
-class InnerMatch extends Match {
+final class InnerMatch extends Match {
 
     @Getter
     private final Instant timestamp;
 
-    public InnerMatch(String homeTeamName, String awayTeamName, int homeTeamScore, int awayTeamScore) {
-        super(homeTeamName, awayTeamName, homeTeamScore, awayTeamScore);
+    public InnerMatch(String homeTeamName, String awayTeamName) {
+        super(homeTeamName, awayTeamName);
+        throw new NotImplementedException();
+    }
+
+    public void setHomeTeamScore(int score) {
+        throw new NotImplementedException();
+    }
+
+    public void setAwayTeamScore(int score) {
         throw new NotImplementedException();
     }
 

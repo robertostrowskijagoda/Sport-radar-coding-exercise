@@ -1,18 +1,18 @@
 package org.robert.ostrowski.jagoda;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.Setter;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-@AllArgsConstructor
+@Getter
 public class Match {
-    private final String homeTeamName;
-    private final String awayTeamName;
-    @Getter @Setter
-    private volatile int homeTeamScore;
-    @Getter @Setter
-    private volatile int awayTeamScore;
+    protected final String homeTeamName;
+    protected final String awayTeamName;
+    protected volatile int homeTeamScore;
+    protected volatile int awayTeamScore;
+
+    Match(String homeTeamName, String awayTeamName) {
+        throw new NotImplementedException();
+    }
 
     @Override
     public String toString() {
