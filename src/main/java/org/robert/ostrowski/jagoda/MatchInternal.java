@@ -6,12 +6,12 @@ import java.time.Clock;
 import java.time.Instant;
 
 @Getter
-final class InnerMatch extends Match {
+final class MatchInternal extends Match {
 
     private final Instant timestamp;
     private String stringId;
 
-    InnerMatch(Clock clock, String homeTeamName, String awayTeamName) {
+    MatchInternal(Clock clock, String homeTeamName, String awayTeamName) {
         super(homeTeamName, awayTeamName);
         timestamp = Instant.now(clock);
     }

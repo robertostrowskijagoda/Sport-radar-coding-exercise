@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class InnerMatchTest {
+public class MatchInternalTest {
 
     String homeName = "Home";
     String awayName = "Away";
@@ -20,29 +20,29 @@ public class InnerMatchTest {
 
     @Test
     void testProperValuesPassedToBase() {
-        InnerMatch innerMatch = new InnerMatch(defaultClock, homeName, awayName);
-        Assertions.assertEquals(homeName, innerMatch.getHomeTeamName());
-        Assertions.assertEquals(awayName, innerMatch.getAwayTeamName());
-        Assertions.assertEquals(0, innerMatch.getHomeTeamScore());
-        Assertions.assertEquals(0, innerMatch.getAwayTeamScore());
+        MatchInternal matchInternal = new MatchInternal(defaultClock, homeName, awayName);
+        Assertions.assertEquals(homeName, matchInternal.getHomeTeamName());
+        Assertions.assertEquals(awayName, matchInternal.getAwayTeamName());
+        Assertions.assertEquals(0, matchInternal.getHomeTeamScore());
+        Assertions.assertEquals(0, matchInternal.getAwayTeamScore());
     }
 
     @Test
     void testProperTimestamp() {
         Clock clock = Clock.fixed(Instant.ofEpochMilli(0), ZoneId.of("UTC"));
-        InnerMatch innerMatch = new InnerMatch(clock, homeName, awayName);
-        Assertions.assertEquals(clock.instant(), innerMatch.getTimestamp());
+        MatchInternal matchInternal = new MatchInternal(clock, homeName, awayName);
+        Assertions.assertEquals(clock.instant(), matchInternal.getTimestamp());
     }
 
     @Test
     void testGenerateStringId() {
-        Assertions.assertEquals(homeName + ":" + awayName, InnerMatch.generateStringId(homeName, awayName));
+        Assertions.assertEquals(homeName + ":" + awayName, MatchInternal.generateStringId(homeName, awayName));
     }
 
     @Test
     void testGetStringId() {
-        InnerMatch innerMatch = new InnerMatch(defaultClock, homeName, awayName);
-        Assertions.assertEquals(InnerMatch.generateStringId(homeName, awayName), innerMatch.getStringId());
+        MatchInternal matchInternal = new MatchInternal(defaultClock, homeName, awayName);
+        Assertions.assertEquals(MatchInternal.generateStringId(homeName, awayName), matchInternal.getStringId());
     }
 
     void testSetNegativeScore(Consumer<Integer> setter) {
@@ -51,14 +51,14 @@ public class InnerMatchTest {
 
     @Test
     void testSetHomeNegativeScore() {
-        InnerMatch innerMatch = new InnerMatch(defaultClock, homeName, awayName);
-        testSetNegativeScore(innerMatch::setHomeTeamScore);
+        MatchInternal matchInternal = new MatchInternal(defaultClock, homeName, awayName);
+        testSetNegativeScore(matchInternal::setHomeTeamScore);
     }
 
     @Test
     void testSetAwayNegativeScore() {
-        InnerMatch innerMatch = new InnerMatch(defaultClock, homeName, awayName);
-        testSetNegativeScore(innerMatch::setAwayTeamScore);
+        MatchInternal matchInternal = new MatchInternal(defaultClock, homeName, awayName);
+        testSetNegativeScore(matchInternal::setAwayTeamScore);
     }
 
     void testSingleThreadSetGet(Consumer<Integer> setter, Supplier<Integer> getter) {
@@ -69,24 +69,24 @@ public class InnerMatchTest {
 
     @Test
     void testSingleThreadSetGetHomeScore() {
-        InnerMatch innerMatch = new InnerMatch(defaultClock, homeName, awayName);
-        testSingleThreadSetGet(innerMatch::setHomeTeamScore, innerMatch::getHomeTeamScore);
+        MatchInternal matchInternal = new MatchInternal(defaultClock, homeName, awayName);
+        testSingleThreadSetGet(matchInternal::setHomeTeamScore, matchInternal::getHomeTeamScore);
     }
 
     @Test
     void testSingleThreadSetGetAwayScore() {
-        InnerMatch innerMatch = new InnerMatch(defaultClock, homeName, awayName);
-        testSingleThreadSetGet(innerMatch::setAwayTeamScore, innerMatch::getAwayTeamScore);
+        MatchInternal matchInternal = new MatchInternal(defaultClock, homeName, awayName);
+        testSingleThreadSetGet(matchInternal::setAwayTeamScore, matchInternal::getAwayTeamScore);
     }
 
     @Test
     void testSingleThreadGetTotalScore() {
-        InnerMatch innerMatch = new InnerMatch(defaultClock, homeName, awayName);
-        Assertions.assertEquals(0, innerMatch.getTotalScore());
-        innerMatch.setAwayTeamScore(5);
-        Assertions.assertEquals(5, innerMatch.getTotalScore());
-        innerMatch.setHomeTeamScore(10);
-        Assertions.assertEquals(15, innerMatch.getTotalScore());
+        MatchInternal matchInternal = new MatchInternal(defaultClock, homeName, awayName);
+        Assertions.assertEquals(0, matchInternal.getTotalScore());
+        matchInternal.setAwayTeamScore(5);
+        Assertions.assertEquals(5, matchInternal.getTotalScore());
+        matchInternal.setHomeTeamScore(10);
+        Assertions.assertEquals(15, matchInternal.getTotalScore());
     }
 
     //I am not sure about this test, but I think that we should test if setter/getter works with multithreading.
@@ -128,13 +128,13 @@ public class InnerMatchTest {
 
     @Test
     void testMultithreadedSetGetHomeScore() throws InterruptedException {
-        InnerMatch innerMatch = new InnerMatch(defaultClock, homeName, awayName);
-        testMultithreadedSetGetScore(innerMatch::setHomeTeamScore, innerMatch::getHomeTeamScore);
+        MatchInternal matchInternal = new MatchInternal(defaultClock, homeName, awayName);
+        testMultithreadedSetGetScore(matchInternal::setHomeTeamScore, matchInternal::getHomeTeamScore);
     }
 
     @Test
     void testMultithreadedSetGetAwayScore() throws InterruptedException {
-        InnerMatch innerMatch = new InnerMatch(defaultClock, homeName, awayName);
-        testMultithreadedSetGetScore(innerMatch::setAwayTeamScore, innerMatch::getAwayTeamScore);
+        MatchInternal matchInternal = new MatchInternal(defaultClock, homeName, awayName);
+        testMultithreadedSetGetScore(matchInternal::setAwayTeamScore, matchInternal::getAwayTeamScore);
     }
 }

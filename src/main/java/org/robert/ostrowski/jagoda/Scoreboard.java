@@ -11,7 +11,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public final class Scoreboard {
 
     final Clock clock = Clock.system(ZoneId.of("UTC"));
-    final ConcurrentMap<Long, InnerMatch> matches = new ConcurrentHashMap<>();
+    final ConcurrentMap<Long, MatchInternal> matches = new ConcurrentHashMap<>();
     final ConcurrentMap<String, Long> matchesKeys = new ConcurrentHashMap<>();
     final ConcurrentMap<String, Long> activeTeams = new ConcurrentHashMap<>();
     final ConcurrentLinkedQueue<Long> freeKeys = new ConcurrentLinkedQueue<>();
@@ -34,9 +34,9 @@ public final class Scoreboard {
                 throw new IllegalStateException("Away team is during match (id: " + existingAway + ")");
             }
 
-            InnerMatch innerMatch = new InnerMatch(clock, homeTeamName, awayTeamName);
-            matches.put(key, innerMatch);
-            matchesKeys.put(innerMatch.getStringId(), key);
+            MatchInternal matchInternal = new MatchInternal(clock, homeTeamName, awayTeamName);
+            matches.put(key, matchInternal);
+            matchesKeys.put(matchInternal.getStringId(), key);
             return key;
         } catch (Throwable t) {
             activeTeams.remove(homeTeamName, key);
@@ -47,13 +47,13 @@ public final class Scoreboard {
     }
 
     public void updateScore (long matchId, int homeTeamScore, int awayTeamScore) {
-        InnerMatch match = getMatchOrThrow(matchId);
+        MatchInternal match = getMatchOrThrow(matchId);
         match.setHomeTeamScore(homeTeamScore);
         match.setAwayTeamScore(awayTeamScore);
     }
 
     public void finishMatch (long matchId) {
-        InnerMatch match = getMatchOrThrow(matchId);
+        MatchInternal match = getMatchOrThrow(matchId);
         String stringId = match.getStringId();
         matches.remove(matchId);
         matchesKeys.remove(stringId);
@@ -63,7 +63,7 @@ public final class Scoreboard {
     }
 
     public long findMatchId (String homeTeamName, String awayTeamName) {
-        String stringId = InnerMatch.generateStringId(homeTeamName, awayTeamName);
+        String stringId = MatchInternal.generateStringId(homeTeamName, awayTeamName);
         Long matchId = matchesKeys.get(stringId);
         if (matchId == null)
             return -1;
@@ -92,8 +92,8 @@ public final class Scoreboard {
         freeKeys.add(key);
     }
 
-    private InnerMatch getMatchOrThrow(long matchId) {
-        InnerMatch match = matches.get(matchId);
+    private MatchInternal getMatchOrThrow(long matchId) {
+        MatchInternal match = matches.get(matchId);
         if (match == null)
             throw new IllegalArgumentException("Provided match id do not correspond with any match");
         return match;
