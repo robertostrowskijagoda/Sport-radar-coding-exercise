@@ -26,6 +26,30 @@ public class MatchTest {
     }
 
     @Test
+    void testHomeEmptyNameConstructor() {
+        String name = "Name";
+        Assertions.assertThrows(IllegalArgumentException.class, () -> new Match("", name));
+    }
+
+    @Test
+    void testAwayEmptyNameConstructor() {
+        String name = "Name";
+        Assertions.assertThrows(IllegalArgumentException.class, () -> new Match(name, ""));
+    }
+
+    @Test
+    void testHomeNullNameConstructor() {
+        String name = "Name";
+        Assertions.assertThrows(IllegalArgumentException.class, () -> new Match(null, name));
+    }
+
+    @Test
+    void testAwayNullNameConstructor() {
+        String name = "Name";
+        Assertions.assertThrows(IllegalArgumentException.class, () -> new Match(name, null));
+    }
+
+    @Test
     void testRestrictedCharInHomeNameConstructor() {
         String homeName = "Home:Name";
         String awayName = "Away";

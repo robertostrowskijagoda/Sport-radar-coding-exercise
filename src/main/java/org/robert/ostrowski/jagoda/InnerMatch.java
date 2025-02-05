@@ -1,7 +1,6 @@
 package org.robert.ostrowski.jagoda;
 
 import lombok.Getter;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -10,29 +9,32 @@ import java.time.Instant;
 final class InnerMatch extends Match {
 
     private final Instant timestamp;
+    private String stringId;
 
     InnerMatch(Clock clock, String homeTeamName, String awayTeamName) {
         super(homeTeamName, awayTeamName);
-        throw new NotImplementedException();
+        timestamp = Instant.now(clock);
     }
 
     void setHomeTeamScore(int score) {
-        throw new NotImplementedException();
+        homeTeamScore = score;
     }
 
     void setAwayTeamScore(int score) {
-        throw new NotImplementedException();
+        awayTeamScore = score;
     }
 
     int getTotalScore() {
-        throw new NotImplementedException();
+        return homeTeamScore + awayTeamScore;
     }
 
     public String getStringId() {
-        throw new NotImplementedException();
+        if (stringId == null)
+            stringId = generateStringId(homeTeamName, awayTeamName);
+        return stringId;
     }
 
     static String generateStringId(String homeName, String awayName) {
-        throw new NotImplementedException();
+        return homeName + ":" + awayName;
     }
 }
