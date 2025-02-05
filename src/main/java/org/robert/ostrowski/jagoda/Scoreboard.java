@@ -14,23 +14,36 @@ public final class Scoreboard {
     final ConcurrentMap<Long, InnerMatch> matches = new ConcurrentHashMap<>();
     final ConcurrentMap<String, Long> matchesKeys = new ConcurrentHashMap<>();
     final ConcurrentMap<String, Long> activeTeams = new ConcurrentHashMap<>();
-    final Queue<Long> freeKeys = new LinkedList<>();
+    final ConcurrentLinkedQueue<Long> freeKeys = new ConcurrentLinkedQueue<>();
     final AtomicLong currKey = new AtomicLong();
 
-    public long startNewMatch (String homeTeamName, String awayTeamName) {
-        InnerMatch innerMatch = new InnerMatch(clock, homeTeamName, awayTeamName);
-        Long homeTeamMatchId = activeTeams.get(homeTeamName);
-        if (homeTeamMatchId != null)
-            throw new IllegalStateException("Home team is during match (id: " + homeTeamMatchId + ")");
-        Long awayTeamMatchId = activeTeams.get(awayTeamName);
-        if (awayTeamMatchId != null)
-            throw new IllegalStateException("Home team is during match (id: " + awayTeamMatchId + ")");
+    public long startNewMatch(String homeTeamName, String awayTeamName) {
         long key = getFreeKey();
-        matches.put(key, innerMatch);
-        matchesKeys.put(innerMatch.getStringId(), key);
-        activeTeams.put(homeTeamName, key);
-        activeTeams.put(awayTeamName, key);
-        return key;
+
+        Long existingHome = activeTeams.putIfAbsent(homeTeamName, key);
+        if (existingHome != null) {
+            returnKey(key);
+            throw new IllegalStateException("Home team is during match (id: " + existingHome + ")");
+        }
+
+        try {
+            Long existingAway = activeTeams.putIfAbsent(awayTeamName, key);
+            if (existingAway != null) {
+                activeTeams.remove(homeTeamName, key);
+                returnKey(key);
+                throw new IllegalStateException("Away team is during match (id: " + existingAway + ")");
+            }
+
+            InnerMatch innerMatch = new InnerMatch(clock, homeTeamName, awayTeamName);
+            matches.put(key, innerMatch);
+            matchesKeys.put(innerMatch.getStringId(), key);
+            return key;
+        } catch (Throwable t) {
+            activeTeams.remove(homeTeamName, key);
+            activeTeams.remove(awayTeamName, key);
+            returnKey(key);
+            throw t;
+        }
     }
 
     public void updateScore (long matchId, int homeTeamScore, int awayTeamScore) {
@@ -40,12 +53,13 @@ public final class Scoreboard {
     }
 
     public void finishMatch (long matchId) {
-        returnKey(matchId);
         InnerMatch match = getMatchOrThrow(matchId);
-        matchesKeys.remove(match.getStringId());
+        String stringId = match.getStringId();
         matches.remove(matchId);
-        activeTeams.remove(match.getHomeTeamName());
-        activeTeams.remove(match.getAwayTeamName());
+        matchesKeys.remove(stringId);
+        activeTeams.remove(match.getHomeTeamName(), matchId);
+        activeTeams.remove(match.getAwayTeamName(), matchId);
+        returnKey(matchId);
     }
 
     public long findMatchId (String homeTeamName, String awayTeamName) {
@@ -70,18 +84,12 @@ public final class Scoreboard {
     }
 
     private long getFreeKey() {
-        synchronized (freeKeys) {
-            if (!freeKeys.isEmpty())
-                return freeKeys.poll();
-        }
-        return currKey.getAndIncrement();
+        Long key = freeKeys.poll();
+        return key != null ? key : currKey.getAndIncrement();
     }
 
     private void returnKey(long key) {
-        if (key == currKey.get() - 1)
-            currKey.decrementAndGet();
-        else
-            freeKeys.add(key);
+        freeKeys.add(key);
     }
 
     private InnerMatch getMatchOrThrow(long matchId) {

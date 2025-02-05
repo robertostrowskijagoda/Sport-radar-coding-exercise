@@ -158,11 +158,9 @@ public class ScoreboardTest {
         synchronized (matchId) {
             if (matchId.get() == -1) {
                 long id = scoreboard.startNewMatch(homeName, awayName);
-                System.out.println("Start: " + id + ", " + homeName + ", " + awayName + ", " + Thread.currentThread().getName());
                 matchId.set(id);
             } else {
                 scoreboard.finishMatch(matchId.get());
-                System.out.println("End: " + matchId.get() + ", " + Thread.currentThread().getName());
                 matchId.set(scoreboard.findMatchId(homeName, awayName));
             }
         }
