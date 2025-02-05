@@ -182,18 +182,23 @@ public class ScoreboardTest {
     }
 
     void  multithreadLoop(int iterations, AtomicLong match1Id, AtomicLong match2Id, Scoreboard scoreboard, AtomicBoolean failed) {
-        for (int i = 0; i < iterations; i++) {
-            multithreadChange(scoreboard, match1Id, homeName, awayName);
-            if(multithreadVerify(scoreboard, match1Id, failed, homeName, awayName)) return;
-            multithreadChange(scoreboard, match2Id, homeName2, awayName2);
-            if(multithreadVerify(scoreboard, match2Id, failed, homeName2, awayName2)) return;
+        try {
+            for (int i = 0; i < iterations; i++) {
+                multithreadChange(scoreboard, match1Id, homeName, awayName);
+                if (multithreadVerify(scoreboard, match1Id, failed, homeName, awayName)) return;
+                multithreadChange(scoreboard, match2Id, homeName2, awayName2);
+                if (multithreadVerify(scoreboard, match2Id, failed, homeName2, awayName2)) return;
+            }
+        } catch (Exception exception) {
+            failed.set(true);
+            throw exception;
         }
     }
 
     @Test
     void testMultithreading() throws InterruptedException {
-        AtomicLong match1Id = new AtomicLong();
-        AtomicLong match2Id = new AtomicLong();
+        AtomicLong match1Id = new AtomicLong(-1);
+        AtomicLong match2Id = new AtomicLong(-1);
         Scoreboard scoreboard = new Scoreboard();
         AtomicBoolean failed = new AtomicBoolean();
 
@@ -207,5 +212,7 @@ public class ScoreboardTest {
         worker1.join();
         worker2.join();
         worker3.join();
+
+        Assertions.assertFalse(failed.get());
     }
 }
