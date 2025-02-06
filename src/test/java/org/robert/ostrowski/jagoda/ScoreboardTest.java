@@ -142,6 +142,8 @@ public class ScoreboardTest {
         Assertions.assertEquals(1, summary.size());
         Assertions.assertEquals(new Match(homeName, awayName), summary.get(0));
 
+        TestUtils.waitUntilNanoTimeChanges(); //This is hack, please read about it in the README.md
+
         scoreboard.startNewMatch(homeName2, awayName2);
         summary = scoreboard.getSummary();
         Assertions.assertEquals(2, summary.size());
