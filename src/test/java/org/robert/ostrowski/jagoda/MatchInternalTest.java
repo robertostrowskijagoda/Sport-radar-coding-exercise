@@ -16,22 +16,14 @@ public class MatchInternalTest {
 
     String homeName = "Home";
     String awayName = "Away";
-    Clock defaultClock = Clock.systemUTC();
 
     @Test
     void testProperValuesPassedToBase() {
-        MatchInternal matchInternal = new MatchInternal(defaultClock, homeName, awayName);
+        MatchInternal matchInternal = new MatchInternal(homeName, awayName);
         Assertions.assertEquals(homeName, matchInternal.getHomeTeamName());
         Assertions.assertEquals(awayName, matchInternal.getAwayTeamName());
         Assertions.assertEquals(0, matchInternal.getHomeTeamScore());
         Assertions.assertEquals(0, matchInternal.getAwayTeamScore());
-    }
-
-    @Test
-    void testProperTimestamp() {
-        Clock clock = Clock.fixed(Instant.ofEpochMilli(0), ZoneId.of("UTC"));
-        MatchInternal matchInternal = new MatchInternal(clock, homeName, awayName);
-        Assertions.assertEquals(clock.instant(), matchInternal.getTimestamp());
     }
 
     @Test
@@ -41,7 +33,7 @@ public class MatchInternalTest {
 
     @Test
     void testGetStringId() {
-        MatchInternal matchInternal = new MatchInternal(defaultClock, homeName, awayName);
+        MatchInternal matchInternal = new MatchInternal(homeName, awayName);
         Assertions.assertEquals(MatchInternal.generateStringId(homeName, awayName), matchInternal.getStringId());
     }
 
@@ -51,13 +43,13 @@ public class MatchInternalTest {
 
     @Test
     void testSetHomeNegativeScore() {
-        MatchInternal matchInternal = new MatchInternal(defaultClock, homeName, awayName);
+        MatchInternal matchInternal = new MatchInternal(homeName, awayName);
         testSetNegativeScore(matchInternal::setHomeTeamScore);
     }
 
     @Test
     void testSetAwayNegativeScore() {
-        MatchInternal matchInternal = new MatchInternal(defaultClock, homeName, awayName);
+        MatchInternal matchInternal = new MatchInternal(homeName, awayName);
         testSetNegativeScore(matchInternal::setAwayTeamScore);
     }
 
@@ -69,19 +61,19 @@ public class MatchInternalTest {
 
     @Test
     void testSingleThreadSetGetHomeScore() {
-        MatchInternal matchInternal = new MatchInternal(defaultClock, homeName, awayName);
+        MatchInternal matchInternal = new MatchInternal(homeName, awayName);
         testSingleThreadSetGet(matchInternal::setHomeTeamScore, matchInternal::getHomeTeamScore);
     }
 
     @Test
     void testSingleThreadSetGetAwayScore() {
-        MatchInternal matchInternal = new MatchInternal(defaultClock, homeName, awayName);
+        MatchInternal matchInternal = new MatchInternal(homeName, awayName);
         testSingleThreadSetGet(matchInternal::setAwayTeamScore, matchInternal::getAwayTeamScore);
     }
 
     @Test
     void testSingleThreadGetTotalScore() {
-        MatchInternal matchInternal = new MatchInternal(defaultClock, homeName, awayName);
+        MatchInternal matchInternal = new MatchInternal(homeName, awayName);
         Assertions.assertEquals(0, matchInternal.getTotalScore());
         matchInternal.setAwayTeamScore(5);
         Assertions.assertEquals(5, matchInternal.getTotalScore());
@@ -128,13 +120,13 @@ public class MatchInternalTest {
 
     @Test
     void testMultithreadedSetGetHomeScore() throws InterruptedException {
-        MatchInternal matchInternal = new MatchInternal(defaultClock, homeName, awayName);
+        MatchInternal matchInternal = new MatchInternal(homeName, awayName);
         testMultithreadedSetGetScore(matchInternal::setHomeTeamScore, matchInternal::getHomeTeamScore);
     }
 
     @Test
     void testMultithreadedSetGetAwayScore() throws InterruptedException {
-        MatchInternal matchInternal = new MatchInternal(defaultClock, homeName, awayName);
+        MatchInternal matchInternal = new MatchInternal(homeName, awayName);
         testMultithreadedSetGetScore(matchInternal::setAwayTeamScore, matchInternal::getAwayTeamScore);
     }
 }

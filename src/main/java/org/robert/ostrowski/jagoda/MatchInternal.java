@@ -8,12 +8,10 @@ import java.time.Instant;
 @Getter
 final class MatchInternal extends Match {
 
-    private final Instant timestamp;
     private String stringId;
 
-    MatchInternal(Clock clock, String homeTeamName, String awayTeamName) {
+    MatchInternal(String homeTeamName, String awayTeamName) {
         super(homeTeamName, awayTeamName);
-        timestamp = Instant.now(clock);
     }
 
     void setHomeTeamScore(int score) {

@@ -54,13 +54,13 @@ public class ScoreboardTest {
     @Test
     void testStartAndSummaryForMultipleDefaultMatches() {
         Scoreboard scoreboard = new Scoreboard();
-        scoreboard.startNewMatch(homeName, awayName);
+        long a = scoreboard.startNewMatch(homeName, awayName);
         Assertions.assertEquals(1, scoreboard.getSummary().size());
-        scoreboard.startNewMatch(homeName2, awayName2);
+        long b = scoreboard.startNewMatch(homeName2, awayName2);
         List<Match> matches = scoreboard.getSummary();
         Assertions.assertEquals(2, matches.size());
-        Assertions.assertEquals(new Match(homeName, awayName), matches.get(0));
-        Assertions.assertEquals(new Match(homeName2, awayName2), matches.get(1));
+        Assertions.assertEquals(new Match(homeName2, awayName2), matches.get(0));
+        Assertions.assertEquals(new Match(homeName, awayName), matches.get(1));
     }
 
     @Test
@@ -141,8 +141,6 @@ public class ScoreboardTest {
         List<Match> summary = scoreboard.getSummary();
         Assertions.assertEquals(1, summary.size());
         Assertions.assertEquals(new Match(homeName, awayName), summary.get(0));
-
-        TestUtils.waitUntilNanoTimeChanges(); //This is hack, please read about it in the README.md
 
         scoreboard.startNewMatch(homeName2, awayName2);
         summary = scoreboard.getSummary();

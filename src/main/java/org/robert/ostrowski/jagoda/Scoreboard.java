@@ -1,28 +1,22 @@
 package org.robert.ostrowski.jagoda;
 
-import java.time.Clock;
-import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 public final class Scoreboard {
 
-    final Clock clock = Clock.system(ZoneId.of("UTC"));
     final ConcurrentMap<Long, MatchInternal> matches = new ConcurrentHashMap<>();
     final ConcurrentMap<String, Long> matchesKeys = new ConcurrentHashMap<>();
     final ConcurrentMap<String, Long> activeTeams = new ConcurrentHashMap<>();
-    final ConcurrentLinkedQueue<Long> freeKeys = new ConcurrentLinkedQueue<>();
     final AtomicLong currKey = new AtomicLong();
 
     public long startNewMatch(String homeTeamName, String awayTeamName) {
-        long key = getFreeKey();
+        long key = currKey.getAndIncrement();
 
         Long existingHome = activeTeams.putIfAbsent(homeTeamName, key);
         if (existingHome != null) {
-            returnKey(key);
             throw new IllegalStateException("Home team is during match (id: " + existingHome + ")");
         }
 
@@ -30,18 +24,16 @@ public final class Scoreboard {
             Long existingAway = activeTeams.putIfAbsent(awayTeamName, key);
             if (existingAway != null) {
                 activeTeams.remove(homeTeamName, key);
-                returnKey(key);
                 throw new IllegalStateException("Away team is during match (id: " + existingAway + ")");
             }
 
-            MatchInternal matchInternal = new MatchInternal(clock, homeTeamName, awayTeamName);
+            MatchInternal matchInternal = new MatchInternal(homeTeamName, awayTeamName);
             matches.put(key, matchInternal);
             matchesKeys.put(matchInternal.getStringId(), key);
             return key;
         } catch (Throwable t) {
             activeTeams.remove(homeTeamName, key);
             activeTeams.remove(awayTeamName, key);
-            returnKey(key);
             throw t;
         }
     }
@@ -59,7 +51,6 @@ public final class Scoreboard {
         matchesKeys.remove(stringId);
         activeTeams.remove(match.getHomeTeamName(), matchId);
         activeTeams.remove(match.getAwayTeamName(), matchId);
-        returnKey(matchId);
     }
 
     public long findMatchId (String homeTeamName, String awayTeamName) {
@@ -75,21 +66,15 @@ public final class Scoreboard {
     }
 
     public List<Match> getSummary () {
-        return matches.values().parallelStream().sorted((m1, m2) -> {
+        return matches.entrySet().parallelStream().sorted((e1, e2) -> {
+            MatchInternal m1 = e1.getValue();
+            MatchInternal m2 = e2.getValue();
             int diff = m2.getTotalScore() - m1.getTotalScore();
             if (diff != 0)
                 return diff;
-            return m2.getTimestamp().compareTo(m1.getTimestamp());
-        }).map(Match::new).toList();
-    }
-
-    private long getFreeKey() {
-        Long key = freeKeys.poll();
-        return key != null ? key : currKey.getAndIncrement();
-    }
-
-    private void returnKey(long key) {
-        freeKeys.add(key);
+            long timeDiff = e2.getKey() - e1.getKey();
+            return timeDiff < 0 ? -1 : (timeDiff > 0 ? 1 : 0);
+        }).map(e -> new Match(e.getValue())).toList();
     }
 
     private MatchInternal getMatchOrThrow(long matchId) {
