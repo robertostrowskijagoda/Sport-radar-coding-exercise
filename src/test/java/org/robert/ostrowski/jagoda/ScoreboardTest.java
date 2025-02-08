@@ -17,26 +17,50 @@ public class ScoreboardTest {
 
     @Test
     void testGetMatchImmutability() {
-        Scoreboard scoreboard = new Scoreboard();
-        long id = scoreboard.startNewMatch(homeName, awayName);
         int homeTeamScore1 = 1234;
         int awayTeamScore1 = 5678;
         int homeTeamScore2 = 4321;
         int awayTeamScore2 = 8765;
+        Scoreboard scoreboard = new Scoreboard();
+
+        long id = scoreboard.startNewMatch(homeName, awayName);
+
         scoreboard.updateScore(id, homeTeamScore1, awayTeamScore1);
+
         Match match1 = scoreboard.getMatchById(id);
-        Match match1a = scoreboard.getSummary().get(0);
         Assertions.assertEquals(homeTeamScore1, match1.getHomeTeamScore());
         Assertions.assertEquals(awayTeamScore1, match1.getAwayTeamScore());
-        Assertions.assertEquals(homeTeamScore1, match1a.getHomeTeamScore());
-        Assertions.assertEquals(awayTeamScore1, match1a.getAwayTeamScore());
+
         scoreboard.updateScore(id, homeTeamScore2, awayTeamScore2);
+
         Match match2 = scoreboard.getMatchById(id);
-        Match match2a = scoreboard.getSummary().get(0);
+
         Assertions.assertEquals(homeTeamScore2, match2.getHomeTeamScore());
         Assertions.assertEquals(awayTeamScore2, match2.getAwayTeamScore());
         Assertions.assertEquals(homeTeamScore1, match1.getHomeTeamScore());
         Assertions.assertEquals(awayTeamScore1, match1.getAwayTeamScore());
+    }
+
+    @Test
+    void testGetSummaryImmutability() {
+        int homeTeamScore1 = 1234;
+        int awayTeamScore1 = 5678;
+        int homeTeamScore2 = 4321;
+        int awayTeamScore2 = 8765;
+        Scoreboard scoreboard = new Scoreboard();
+
+        long id = scoreboard.startNewMatch(homeName, awayName);
+
+        scoreboard.updateScore(id, homeTeamScore1, awayTeamScore1);
+
+        Match match1a = scoreboard.getSummary().get(0);
+        Assertions.assertEquals(homeTeamScore1, match1a.getHomeTeamScore());
+        Assertions.assertEquals(awayTeamScore1, match1a.getAwayTeamScore());
+
+        scoreboard.updateScore(id, homeTeamScore2, awayTeamScore2);
+
+        Match match2a = scoreboard.getSummary().get(0);
+
         Assertions.assertEquals(homeTeamScore2, match2a.getHomeTeamScore());
         Assertions.assertEquals(awayTeamScore2, match2a.getAwayTeamScore());
         Assertions.assertEquals(homeTeamScore1, match1a.getHomeTeamScore());
@@ -54,11 +78,15 @@ public class ScoreboardTest {
     @Test
     void testStartAndSummaryForMultipleDefaultMatches() {
         Scoreboard scoreboard = new Scoreboard();
-        long a = scoreboard.startNewMatch(homeName, awayName);
+
+        scoreboard.startNewMatch(homeName, awayName);
         Assertions.assertEquals(1, scoreboard.getSummary().size());
-        long b = scoreboard.startNewMatch(homeName2, awayName2);
+
+        scoreboard.startNewMatch(homeName2, awayName2);
+
         List<Match> matches = scoreboard.getSummary();
         Assertions.assertEquals(2, matches.size());
+
         Assertions.assertEquals(new Match(homeName2, awayName2), matches.get(0));
         Assertions.assertEquals(new Match(homeName, awayName), matches.get(1));
     }
@@ -80,10 +108,13 @@ public class ScoreboardTest {
     @Test
     void testStartFinishAndSummaryForDefaultMatch() {
         Scoreboard scoreboard = new Scoreboard();
+
         long matchId = scoreboard.startNewMatch(homeName, awayName);
         Assertions.assertEquals(1, scoreboard.getSummary().size());
+
         scoreboard.finishMatch(matchId);
         Assertions.assertEquals(0, scoreboard.getSummary().size());
+
         Assertions.assertDoesNotThrow(() -> scoreboard.startNewMatch(homeName, awayName));
     }
 
@@ -102,10 +133,13 @@ public class ScoreboardTest {
     @Test
     void testUpdateAndGetWithValidMatchId() {
         Scoreboard scoreboard = new Scoreboard();
+
         long matchId = scoreboard.startNewMatch(homeName, awayName);
         Match match = scoreboard.getMatchById(matchId);
         Assertions.assertEquals(new Match(homeName, awayName), match);
+
         scoreboard.updateScore(matchId, 1234, 5678);
+
         match = scoreboard.getMatchById(matchId);
         Assertions.assertEquals(1234, match.getHomeTeamScore());
         Assertions.assertEquals(5678, match.getAwayTeamScore());
@@ -114,20 +148,29 @@ public class ScoreboardTest {
     @Test
     void testFindMatchId() {
         Scoreboard scoreboard = new Scoreboard();
+
         long matchId1 = scoreboard.startNewMatch(homeName, awayName);
         long matchId2 = scoreboard.startNewMatch(homeName2, awayName2);
-        Assertions.assertEquals(matchId1, scoreboard.findMatchId(homeName, awayName));
-        Assertions.assertEquals(matchId2, scoreboard.findMatchId(homeName2, awayName2));
+
+        Assertions.assertEquals(matchId1, scoreboard.findMatchId(homeName));
+        Assertions.assertEquals(matchId1, scoreboard.findMatchId(awayName));
+        Assertions.assertEquals(matchId2, scoreboard.findMatchId(homeName2));
+        Assertions.assertEquals(matchId2, scoreboard.findMatchId(awayName2));
+
         scoreboard.finishMatch(matchId1);
-        Assertions.assertEquals(-1, scoreboard.findMatchId(homeName, awayName));
+        Assertions.assertEquals(-1, scoreboard.findMatchId(homeName));
+        Assertions.assertEquals(-1, scoreboard.findMatchId(awayName));
     }
 
     @Test
     void testGetMatchById() {
         Scoreboard scoreboard = new Scoreboard();
+
         long matchId = scoreboard.startNewMatch(homeName, awayName);
+
         Match match = scoreboard.getMatchById(matchId);
         Assertions.assertEquals(new Match(homeName, awayName), match);
+
         scoreboard.finishMatch(matchId);
         Assertions.assertThrows(IllegalArgumentException.class, () -> scoreboard.getMatchById(matchId));
     }
@@ -154,22 +197,22 @@ public class ScoreboardTest {
         Assertions.assertEquals(match1, summary.get(0));
     }
 
-    void multithreadChange(Scoreboard scoreboard, AtomicLong matchId, String homeName, String awayName) {
+    void multithreadingChange(Scoreboard scoreboard, AtomicLong matchId, String homeName, String awayName) {
         synchronized (matchId) {
             if (matchId.get() == -1) {
                 long id = scoreboard.startNewMatch(homeName, awayName);
                 matchId.set(id);
             } else {
                 scoreboard.finishMatch(matchId.get());
-                matchId.set(scoreboard.findMatchId(homeName, awayName));
+                matchId.set(scoreboard.findMatchId(homeName));
             }
         }
     }
 
-    boolean multithreadVerify(Scoreboard scoreboard, AtomicLong matchId, AtomicBoolean failed, String homeName, String awayName) {
+    boolean multithreadingVerify(Scoreboard scoreboard, AtomicLong matchId, AtomicBoolean failed, String homeName, String awayName) {
         synchronized (matchId) {
             if (matchId.get() == -1) {
-                if (scoreboard.findMatchId(homeName, awayName) != -1) {
+                if (scoreboard.findMatchId(homeName) != -1) {
                     failed.set(true);
                     return true;
                 }
@@ -185,13 +228,13 @@ public class ScoreboardTest {
         return false;
     }
 
-    void  multithreadLoop(int iterations, AtomicLong match1Id, AtomicLong match2Id, Scoreboard scoreboard, AtomicBoolean failed) {
+    void multithreadingLoop(int iterations, AtomicLong match1Id, AtomicLong match2Id, Scoreboard scoreboard, AtomicBoolean failed) {
         try {
             for (int i = 0; i < iterations; i++) {
-                multithreadChange(scoreboard, match1Id, homeName, awayName);
-                if (multithreadVerify(scoreboard, match1Id, failed, homeName, awayName)) return;
-                multithreadChange(scoreboard, match2Id, homeName2, awayName2);
-                if (multithreadVerify(scoreboard, match2Id, failed, homeName2, awayName2)) return;
+                multithreadingChange(scoreboard, match1Id, homeName, awayName);
+                if (multithreadingVerify(scoreboard, match1Id, failed, homeName, awayName)) return;
+                multithreadingChange(scoreboard, match2Id, homeName2, awayName2);
+                if (multithreadingVerify(scoreboard, match2Id, failed, homeName2, awayName2)) return;
             }
         } catch (Exception exception) {
             failed.set(true);
@@ -206,9 +249,9 @@ public class ScoreboardTest {
         Scoreboard scoreboard = new Scoreboard();
         AtomicBoolean failed = new AtomicBoolean();
 
-        Thread worker1 = new Thread(() -> multithreadLoop(1000, match1Id, match2Id, scoreboard, failed));
-        Thread worker2 = new Thread(() -> multithreadLoop(1000, match1Id, match2Id, scoreboard, failed));
-        Thread worker3 = new Thread(() -> multithreadLoop(1000, match1Id, match2Id, scoreboard, failed));
+        Thread worker1 = new Thread(() -> multithreadingLoop(1000, match1Id, match2Id, scoreboard, failed));
+        Thread worker2 = new Thread(() -> multithreadingLoop(1000, match1Id, match2Id, scoreboard, failed));
+        Thread worker3 = new Thread(() -> multithreadingLoop(1000, match1Id, match2Id, scoreboard, failed));
 
         worker1.start();
         worker2.start();

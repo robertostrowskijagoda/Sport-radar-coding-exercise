@@ -7,8 +7,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public final class Scoreboard {
 
-    final ConcurrentMap<Long, MatchInternal> matches = new ConcurrentHashMap<>();
-    final ConcurrentMap<String, Long> matchesKeys = new ConcurrentHashMap<>(); //Probably this should be removed, as we have activeTeams
+    final ConcurrentMap<Long, Match> matches = new ConcurrentHashMap<>();
     final ConcurrentMap<String, Long> activeTeams = new ConcurrentHashMap<>();
     final AtomicLong currKey = new AtomicLong();
 
@@ -27,9 +26,8 @@ public final class Scoreboard {
                 throw new IllegalStateException("Away team is during match (id: " + existingAway + ")");
             }
 
-            MatchInternal matchInternal = new MatchInternal(homeTeamName, awayTeamName);
+            Match matchInternal = new Match(homeTeamName, awayTeamName);
             matches.put(key, matchInternal);
-            matchesKeys.put(matchInternal.getStringId(), key);
             return key;
         } catch (Throwable t) {
             activeTeams.remove(homeTeamName, key);
@@ -39,23 +37,20 @@ public final class Scoreboard {
     }
 
     public void updateScore (long matchId, int homeTeamScore, int awayTeamScore) {
-        MatchInternal match = getMatchOrThrow(matchId);
+        Match match = getMatchOrThrow(matchId);
         match.setHomeTeamScore(homeTeamScore);
         match.setAwayTeamScore(awayTeamScore);
     }
 
     public void finishMatch (long matchId) {
-        MatchInternal match = getMatchOrThrow(matchId);
-        String stringId = match.getStringId();
+        Match match = getMatchOrThrow(matchId);
         matches.remove(matchId);
-        matchesKeys.remove(stringId);
         activeTeams.remove(match.getHomeTeamName(), matchId);
         activeTeams.remove(match.getAwayTeamName(), matchId);
     }
 
-    public long findMatchId (String homeTeamName, String awayTeamName) {
-        String stringId = MatchInternal.generateStringId(homeTeamName, awayTeamName);
-        Long matchId = matchesKeys.get(stringId);
+    public long findMatchId (String teamName) {
+        Long matchId = activeTeams.get(teamName);
         if (matchId == null)
             return -1;
         return matchId;
@@ -67,8 +62,8 @@ public final class Scoreboard {
 
     public List<Match> getSummary () {
         return matches.entrySet().parallelStream().sorted((e1, e2) -> {
-            MatchInternal m1 = e1.getValue();
-            MatchInternal m2 = e2.getValue();
+            Match m1 = e1.getValue();
+            Match m2 = e2.getValue();
             int diff = m2.getTotalScore() - m1.getTotalScore();
             if (diff != 0)
                 return diff;
@@ -77,8 +72,8 @@ public final class Scoreboard {
         }).map(e -> new Match(e.getValue())).toList();
     }
 
-    private MatchInternal getMatchOrThrow(long matchId) {
-        MatchInternal match = matches.get(matchId);
+    private Match getMatchOrThrow(long matchId) {
+        Match match = matches.get(matchId);
         if (match == null)
             throw new IllegalArgumentException("Provided match id do not correspond with any match");
         return match;

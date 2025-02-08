@@ -33,6 +33,22 @@ public class Match {
         this.awayTeamName = awayTeamName;
     }
 
+    protected void setHomeTeamScore(int score) {
+        if (score < 0)
+            throw new IllegalArgumentException("Home team score can't be negative");
+        homeTeamScore = score;
+    }
+
+    protected void setAwayTeamScore(int score) {
+        if (score < 0)
+            throw new IllegalArgumentException("Away team score can't be negative");
+        awayTeamScore = score;
+    }
+
+    protected int getTotalScore() {
+        return homeTeamScore + awayTeamScore;
+    }
+
     @Override
     public String toString()
     {
