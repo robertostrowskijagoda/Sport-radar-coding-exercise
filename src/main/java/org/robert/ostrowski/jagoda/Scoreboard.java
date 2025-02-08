@@ -8,7 +8,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public final class Scoreboard {
 
     final ConcurrentMap<Long, MatchInternal> matches = new ConcurrentHashMap<>();
-    final ConcurrentMap<String, Long> matchesKeys = new ConcurrentHashMap<>();
+    final ConcurrentMap<String, Long> matchesKeys = new ConcurrentHashMap<>(); //Probably this should be removed, as we have activeTeams
     final ConcurrentMap<String, Long> activeTeams = new ConcurrentHashMap<>();
     final AtomicLong currKey = new AtomicLong();
 
