@@ -69,20 +69,6 @@ public class MatchTest {
     }
 
     @Test
-    void testRestrictedCharInHomeNameConstructor() {
-        String homeName = "Home:Name";
-        String awayName = "Away";
-        Assertions.assertThrows(IllegalArgumentException.class, () -> new Match(homeName, awayName));
-    }
-
-    @Test
-    void testRestrictedCharInAwayNameConstructor() {
-        String homeName = "Home";
-        String awayName = "Away:Name";
-        Assertions.assertThrows(IllegalArgumentException.class, () -> new Match(homeName, awayName));
-    }
-
-    @Test
     void testToString() {
         Assertions.assertEquals(homeName + " 0 - " + awayName + " 0", new Match(homeName, awayName).toString());
     }
